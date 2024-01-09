@@ -51,12 +51,22 @@ void addNodeIntoTree(TNODE* root, char data)
 }
 
 //Hàm tìm kiếm xem 1 khóa có xuất hiện trên cây hay không
-// nếu có thì trả về nút chứa khóa
+// nếu có thì trả về nút chứa 
 TNODE* findKey(TNODE* root, char key)
 {
-	// CODE tại đây
-	return NULL;
+    if (root == NULL) {
+        return NULL;
+    }
+    if (root->info == key) {
+        return root;
+    }
+    TNODE* result = findKey(root->firstChild, key);
+    if (result != NULL) {
+        return result;
+    }
+    return findKey(root->nextSibling, key);
 }
+
 
 // Hàm đọc cây ban đầu vào từ input
 TNODE* loadTreeFromInputData()
@@ -101,7 +111,11 @@ TNODE* loadTreeFromInputData()
 // nếu nhãn nút cha đã tồn tại thì thêm nút con (chăc chắn KHÔNG trùng nhãn) vào con phải nhất của nút cha
 void addANewChildForNode(TNODE* root, char parentLabel, char newChildLabel)
 {
-	// Code tại đây
+    TNODE* parentNode = findKey(root, parentLabel);
+    if (parentNode == NULL) {
+        return; // Parent not found
+    }
+    addNodeIntoTree(parentNode, newChildLabel);
 }
 
 // hàm thêm 1 loạt nút mới vào cây ban đầu khác rỗng
@@ -131,8 +145,13 @@ void addNewNodeIntoTree(TNODE* root)
 // Các nút cần được giải phóng lần lượt
 void deleteTree(TNODE** root)
 {
-	// Code tại đây
-	*root = NULL;
+    if (*root == NULL) {
+        return;
+    }
+    deleteTree(&((*root)->firstChild));
+    deleteTree(&((*root)->nextSibling));
+    free(*root);
+    *root = NULL;
 }
 
 // tim nut cha cua nut p tren cay co goc la root
@@ -154,8 +173,26 @@ TNODE* findParent(TNODE* root, char branchRootLabel) {
 // nút bị xóa sẽ KHÔNG phải là nút gốc
 void deleteABranch(TNODE* root, char branchRootLabel)
 {
-	// Code tại đây
+    TNODE* parent = findParent(root, branchRootLabel);
+    if (parent == NULL) {
+        return; // Branch root not found
+    }
+    TNODE* branchRoot = findKey(root, branchRootLabel);
+    if (branchRoot != NULL) {
+        deleteTree(&(branchRoot->firstChild));
+        if (parent->firstChild == branchRoot) {
+            parent->firstChild = branchRoot->nextSibling;
+        } else {
+            TNODE* temp = parent->firstChild;
+            while (temp->nextSibling != branchRoot) {
+                temp = temp->nextSibling;
+            }
+            temp->nextSibling = branchRoot->nextSibling;
+        }
+        free(branchRoot);
+    }
 }
+
 
 // hàm xóa các nhánh trên cây đọc vào từ bàn phím
 void deleteBranchs(TNODE* root)
@@ -266,16 +303,26 @@ void postOrderTraversal(TNODE* root) {
 // hàm đếm tổng số lượng nút trên cây
 int countTotalNodes(TNODE* root)
 {
-	// Code tại đây
-	return 0;
+    if (root == NULL) {
+        return 0;
+    }
+    return 1 + countTotalNodes(root->firstChild) + countTotalNodes(root->nextSibling);
 }
+
 
 // hàm đếm tổng số lượng nút lá trên cây
 int countTotalLeaves(TNODE* root)
 {
-	// code tại đây
-	return 0;
+    if (root == NULL) {
+        return 0;
+    }
+    if (root->firstChild == NULL) {
+        return 1;
+    }
+    return countTotalLeaves(root->firstChild) + countTotalLeaves(root->nextSibling);
 }
+
+
 
 // hàm tính và trả về độ cao của root
 // độ cao của lá là 0
